@@ -9,71 +9,71 @@ import java.util.TreeMap;
 public class PortScanner {
     public static void main(String[] args) {
 
-        String targetHost = "localhost"; // Change this to the target host you want to scan
+        String targetHost = "localhost"; // THIS A HOST YOU WANT TO TARGET FOR A SCAN
         int minPort = 1;
         int maxPort = 65535;
 
-        // Create a TreeMap to store port numbers and descriptions
+        // TreeMap made to store port numbers and descriptions
         TreeMap<Integer, String> portData = new TreeMap<>();
 
-        // Read the CSV file outside the loop
+        // Reading the file(CSV) TO THE LOOP OUTSIDE
         String pathToCsv = "service-names-port-numbers.csv";
         try (BufferedReader br = new BufferedReader(new FileReader(pathToCsv))) {
             String line;
             while ((line = br.readLine()) != null) {
-                // Skip lines that don't contain the expected data format
+                // leave the lines that don't have the data layout
                 if (!line.contains(",")) {
                     continue;
                 }
 
-                // Use comma as separator
+                // Use comma as a separator.
                 String[] columns = line.split(",");
 
-                // Check if the line has the expected number of columns
+                // Check if the line has the expected # of columns.
                 if (columns.length >= 4) {
                     try {
-                        // Extract the port number (column 1) and description (column 3)
+                        // Extract the port number (column 1) and the description (column 3).
                         int portNumber = Integer.parseInt(columns[1].trim());
                         String description = columns[3].trim();
 
-                        // Store the data in the TreeMap if the description is not empty
+                        // Savew the data in the TreeMap if the description is not empty.
                         if (!description.isEmpty()) {
                             portData.put(portNumber, description);
                         }
                     } catch (NumberFormatException e) {
-                        // Handle parsing errors (no print here)
+                        // Handle the parsing errors when there is no print.
                     }
                 } else {
-                    // Handle lines that don't have the expected number of columns (no print here)
+                    // Handle lines that don't have the number of columns that are expected (no print here)
                 }
             }
         } catch (IOException e) {
             e.printStackTrace();
         }
 
-        // Now, scan the ports and write to Redis
+        // Scan ports to start Redis
         try (Jedis jedis = new Jedis("localhost", 6379)) {
             for (int port = minPort; port <= maxPort; port++) {
                 try {
                     Socket socket = new Socket(targetHost, port);
 
-                    // Check if the port is in the TreeMap and has a non-empty description
+                    // Make sure to see if the port is in the TreeMap and has an empty description.
                     if (portData.containsKey(port)) {
                         String description = portData.get(port);
 
-                        // Print and create (Set a key-value pair) in Redis only if the description is not empty
+                        // Print and create (key-value pair) in Redis if the description is unavailable. 
                         if (!description.isEmpty()) {
                             System.out.println("Port " + port + ": " + description);
                             jedis.set(String.valueOf(port), description);
 
-                            // Read (Get the value of a key) from Redis
+                            // Read from Redis to get value from the key. 
                             String value = jedis.get(String.valueOf(port));
                             // System.out.println(value);
                         }
                     }
                     socket.close();
                 } catch (IOException e) {
-                    // Port is likely closed or unreachable
+                    // Port is unreachable or not there.
                 }
             }
         } catch (JedisConnectionException e) {
